@@ -21,6 +21,7 @@ var tpl = template.Must(template.ParseFiles("index.html"))
 type Search struct {
 	Query      string
 	NextPage   int
+	PrevPage   int
 	TotalPages int
 	Results    *news.Results
 }
@@ -70,8 +71,16 @@ func searchHandler(newsapi *news.Client) http.HandlerFunc {
 		search := &Search{
 			Query:      searchQuery,
 			NextPage:   nextPage,
+			PrevPage:   nextPage - 1,
 			TotalPages: int(math.Ceil(float64(results.TotalResults) / float64(newsapi.PageSize))),
 			Results:    results,
+		}
+
+		if ok := !search.IsLastPage(); ok {
+			search.NextPage++
+		}
+		if ok := !search.IsFirstPage(); ok {
+			// search.NextPage--
 		}
 		buf := &bytes.Buffer{}
 		err = tpl.Execute(buf, search)
@@ -107,4 +116,12 @@ func main() {
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))
 	mux.HandleFunc("/", indexHandler)
 	http.ListenAndServe(":"+port, mux)
+}
+
+func (s *Search) IsLastPage() bool {
+	return s.NextPage >= s.TotalPages
+}
+
+func (s *Search) IsFirstPage() bool {
+	return s.NextPage == 2
 }
