@@ -125,3 +125,7 @@ func (s *Search) IsLastPage() bool {
 func (s *Search) IsFirstPage() bool {
 	return s.NextPage == 2
 }
+
+func (s *Search) CurrentPage() int {
+	return s.NextPage - 1
+}
